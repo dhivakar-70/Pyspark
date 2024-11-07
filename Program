@@ -1,0 +1,35 @@
+# Import modules
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum, max
+
+# Initialize process
+spark = SparkSession.builder \
+    .appName("COVID Data Analysis") \
+    .getOrCreate()
+
+# Load the COVID-19 dataset
+# Replace 'path/to/covid_dataset.csv' with the actual path to your dataset
+df = spark.read.csv('path/to/covid_dataset.csv', header=True, inferSchema=True)
+df.printSchema()
+
+# Display 
+df.show(5)
+
+total_stats = df.groupBy().sum("confirmed", "deaths", "recovered")
+total_stats.show()
+
+df.filter(col("country") == "India") \
+    .groupBy("date") \
+    .sum("confirmed") \
+    .orderBy("date") \
+    .show()
+
+top_countries = df.groupBy("country") \
+    .agg(sum("confirmed").alias("total_confirmed")) \
+    .orderBy(col("total_confirmed").desc()) \
+    .limit(5)
+top_countries.show()
+max_daily_deaths = df.agg(max("deaths").alias("max_daily_deaths"))
+max_daily_deaths.show()
+
+spark.stop()
